@@ -1,10 +1,7 @@
-import axios from "axios";
+import { axiosInstance } from "../lib/axiosInstance";
 import { create } from "zustand";
 import { toast } from "react-hot-toast";
-const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api",
-  withCredentials: true,
-});
+
 export const useAuthStore = create((set) => ({
   userAuth: null,
   // setUserAuth: (userAuth) => set({ userAuth }),

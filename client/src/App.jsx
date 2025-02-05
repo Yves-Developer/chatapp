@@ -10,7 +10,7 @@ function App() {
   const { userAuth, checkUserAuth } = useAuthStore();
   useEffect(() => {
     checkUserAuth();
-  }, [userAuth, checkUserAuth]);
+  }, [checkUserAuth]);
 
   return (
     <main className="w-full h-screen">
