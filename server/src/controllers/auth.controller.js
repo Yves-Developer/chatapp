@@ -59,5 +59,5 @@ export const signout = async (req, res) => {
 
 // Check Auth Controllers
 export const checkAuth = async (req, res) => {
-  return res.status(200).json({ userId: req.userId });
+  return res.status(200).json({ userId: req.userId.userId });
 };
