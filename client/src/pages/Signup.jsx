@@ -1,8 +1,30 @@
 import { Lock, Mail, User } from "lucide-react";
 import React from "react";
 import DecorativeGrid from "../components/DecorativeGrid";
-
+import { useState } from "react";
+import { useAuthStore } from "../store/useAuthStore";
+import toast from "react-hot-toast";
 const Signup = () => {
+  const [formData, setFormData] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+  });
+  const { signup } = useAuthStore();
+  const validateFileds = () => {
+    if (!formData.fullname) toast.error("FullName is required!");
+    if (!formData.email) toast.error("Email is required!");
+    if (!formData.password) toast.error("Password is required!");
+
+    return true;
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const isValid = validateFileds();
+    if (isValid) {
+      signup(formData);
+    }
+  };
   return (
     <div className="grid lg:grid-cols-2 mini-h-screen w-full">
       {/* Left */}
@@ -15,14 +37,33 @@ const Signup = () => {
           <p className="text-sm text-primary">Enter your details to continue</p>
         </div>
         {/* Form */}
-        <form className="flex flex-col gap-4 w-[300px] space-y-6">
+        <form
+          className="flex flex-col gap-4 w-[300px] space-y-6"
+          onSubmit={handleSubmit}
+        >
           <label className="input">
             <User size={20} />
-            <input type="text" className="grow" placeholder="Full Name" />
+            <input
+              type="text"
+              className="grow"
+              placeholder="Full Name"
+              value={formData.fullname}
+              onChange={(e) =>
+                setFormData({ ...formData, fullname: e.target.value })
+              }
+            />
           </label>
           <label className="input">
             <Mail size={20} />
-            <input type="email" className="grow" placeholder="Email" />
+            <input
+              type="email"
+              className="grow"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
           </label>
           <label className="input">
             <Lock size={20} />
@@ -30,9 +71,15 @@ const Signup = () => {
               type="password"
               className="grow"
               placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
             />
           </label>
-          <button className="btn btn-primary">Sign Up</button>
+          <button type="submit" className="btn btn-primary">
+            Sign Up
+          </button>
         </form>
       </div>
       {/* Right */}

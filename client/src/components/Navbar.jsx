@@ -1,6 +1,8 @@
-import { Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
 const Navbar = () => {
+  const { userAuth, logOut } = useAuthStore();
   return (
     <div className="navbar bg-base-100 shadow-sm">
       <div className="flex-none">
@@ -13,10 +15,17 @@ const Navbar = () => {
           Chatify
         </Link>
       </div>
-      <Link to="/setting" className="flex gap-1 items-center">
-        <Settings size="20" />
-        Setting
-      </Link>
+      {userAuth ? (
+        <button onClick={() => logOut()} className="flex gap-1 items-center">
+          <LogOut size="20" />
+          Log Out
+        </button>
+      ) : (
+        <Link to="/setting" className="flex gap-1 items-center">
+          <Settings size="20" />
+          Setting
+        </Link>
+      )}
     </div>
   );
 };

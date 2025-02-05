@@ -1,8 +1,27 @@
 import { Lock, Mail } from "lucide-react";
 import React from "react";
 import DecorativeGrid from "../components/DecorativeGrid";
-
+import { useState } from "react";
+import { toast } from "react-hot-toast";
+import { useAuthStore } from "../store/useAuthStore";
 const Signin = () => {
+  const { login } = useAuthStore();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const validateFields = () => {
+    if (!formData.email) toast.error("Email is required");
+    if (!formData.password) toast.error("Password is required");
+    return true;
+  };
+  const handleSunmit = (e) => {
+    e.preventDefault();
+    const isValid = validateFields();
+    if (isValid) {
+      login(formData);
+    }
+  };
   return (
     <div className="grid lg:grid-cols-2 mini-h-screen w-full">
       {/* Left */}
@@ -15,10 +34,21 @@ const Signin = () => {
           <p className="text-sm text-primary">Enter your details to continue</p>
         </div>
         {/* Form */}
-        <form className="flex flex-col gap-4 w-[300px] space-y-6">
+        <form
+          onSubmit={handleSunmit}
+          className="flex flex-col gap-4 w-[300px] space-y-6"
+        >
           <label className="input">
             <Mail size={20} />
-            <input type="email" className="grow" placeholder="Email" />
+            <input
+              type="email"
+              className="grow"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
           </label>
           <label className="input">
             <Lock size={20} />
@@ -26,9 +56,15 @@ const Signin = () => {
               type="password"
               className="grow"
               placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
             />
           </label>
-          <button className="btn btn-primary">Sign In</button>
+          <button type="sumbit" className="btn btn-primary">
+            Sign In
+          </button>
         </form>
       </div>
       {/* Right */}

@@ -21,7 +21,6 @@ export const signup = async (req, res) => {
       .status(201)
       .json({ message: "User created successfully", user: newUser });
   } catch (error) {
-    console.log("Error signing up: ", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -47,7 +46,6 @@ export const signin = async (req, res) => {
 
     return res.status(200).json({ message: "Signin successfully", user });
   } catch (error) {
-    console.log("Error signing in: ", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -57,4 +55,9 @@ export const signin = async (req, res) => {
 export const signout = async (req, res) => {
   res.clearCookie("jwtoken");
   return res.status(200).json({ message: "Signout successfully" });
+};
+
+// Check Auth Controllers
+export const checkAuth = async (req, res) => {
+  return res.status(200).json({ userId: req.userId });
 };
