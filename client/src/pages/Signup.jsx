@@ -1,4 +1,4 @@
-import { Lock, Mail, User } from "lucide-react";
+import { Loader2, Lock, Mail, User } from "lucide-react";
 import React from "react";
 import DecorativeGrid from "../components/DecorativeGrid";
 import { useState } from "react";
@@ -10,13 +10,13 @@ const Signup = () => {
     email: "",
     password: "",
   });
-  const { signup } = useAuthStore();
+  const { signup, isSigningUp } = useAuthStore();
   const validateFileds = () => {
     if (!formData.fullname) toast.error("FullName is required!");
     if (!formData.email) toast.error("Email is required!");
     if (!formData.password) toast.error("Password is required!");
 
-    return true;
+    return formData.fullname && formData.email && formData.password;
   };
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -77,7 +77,12 @@ const Signup = () => {
               }
             />
           </label>
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isSigningUp}
+          >
+            {isSigningUp && <Loader2 className="animate-spin" />}
             Sign Up
           </button>
         </form>

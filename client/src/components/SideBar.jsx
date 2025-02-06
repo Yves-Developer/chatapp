@@ -1,13 +1,22 @@
-import { Users } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import React, { useEffect } from "react";
 import Avatar from "./Avatar";
 import { useMessageStore } from "../store/useMessageStore";
 
 const SideBar = () => {
-  const { users, getUsers, selectedUser, setSelectedUser } = useMessageStore();
+  const { users, getUsers, selectedUser, setSelectedUser, isGettingUser } =
+    useMessageStore();
   useEffect(() => {
     getUsers();
   }, [getUsers]);
+
+  if (isGettingUser) {
+    return (
+      <div className="h-full w-20 lg:w-57 border-r border-base-300 flex flex-col justify-center items-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="h-full w-20 lg:w-57 border-r border-base-300 flex flex-col">
       <div className="w-full border-b border-base-300 p-5">

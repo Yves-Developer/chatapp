@@ -1,10 +1,17 @@
+import { Loader2 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMessageStore } from "../store/useMessageStore";
 import { formatTime } from "../utils/dateformat";
 const ChatSelected = () => {
-  const { messages, selectedUser } = useMessageStore();
+  const { messages, isGettingMsg } = useMessageStore();
   const { userAuth } = useAuthStore();
-  console.log("messages:", messages, "AuthUser:", userAuth);
+  if (isGettingMsg) {
+    return (
+      <div className="w-full h-full p-5 flex justify-center items-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="w-full h-full p-5">
       {messages.map((message) => (

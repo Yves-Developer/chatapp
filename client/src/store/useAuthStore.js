@@ -3,9 +3,13 @@ import { create } from "zustand";
 import { toast } from "react-hot-toast";
 
 export const useAuthStore = create((set, get) => ({
+  isSigningUp: null,
+  isSigningIn: null,
   userAuth: null,
+  isCheckingAuth: null,
   // setUserAuth: (userAuth) => set({ userAuth }),
   checkUserAuth: async () => {
+    set({ isCheckingAuth: true });
     const { userAuth } = get();
     try {
       const res = await axiosInstance.get("/auth/check");
@@ -14,9 +18,12 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       toast.error(error.response.data.message);
+    } finally {
+      set({ isCheckingAuth: false });
     }
   },
   signup: async (data) => {
+    set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
       if (res.data) {
@@ -25,16 +32,12 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       toast.error(error.response.data.message);
-    }
-  },
-  logOut: async () => {
-    const res = await axiosInstance.get("/auth/signout");
-    if (res.data) {
-      set({ userAuth: null });
-      toast.success("Account Logout Successfully!");
+    } finally {
+      set({ isSigningUp: false });
     }
   },
   login: async (data) => {
+    set({ isSigningIn: true });
     try {
       const res = await axiosInstance.post("/auth/signin", data);
       if (res.data) {
@@ -43,12 +46,25 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       if (error.response) {
-        // Show the error message from the backend response using toast
         toast.error(error.response.data.message);
       } else {
         // Handle other possible errors (network issues, etc.)
         toast.error("An unexpected error occurred.");
       }
+    } finally {
+      set({ isSigningIn: false });
+    }
+  },
+  logOut: async () => {
+    try {
+      const res = await axiosInstance.get("/auth/signout");
+      if (res.data) {
+        set({ userAuth: null });
+        toast.success("Account Logout Successfully!");
+      }
+    } catch (error) {
+      if (error.response) toast.error(error.response.data.message);
+      console.log("Error :", error);
     }
   },
 }));

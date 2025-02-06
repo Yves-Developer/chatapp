@@ -6,12 +6,19 @@ import HomePage from "./pages/HomePage";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import { Toaster } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 function App() {
-  const { userAuth, checkUserAuth } = useAuthStore();
+  const { userAuth, checkUserAuth, isCheckingAuth } = useAuthStore();
   useEffect(() => {
     checkUserAuth();
   }, [checkUserAuth]);
-
+  if (isCheckingAuth) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
   return (
     <main className="w-full h-screen">
       <Navbar />

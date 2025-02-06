@@ -1,11 +1,11 @@
-import { Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail } from "lucide-react";
 import React from "react";
 import DecorativeGrid from "../components/DecorativeGrid";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../store/useAuthStore";
 const Signin = () => {
-  const { login } = useAuthStore();
+  const { login, isSigningIn } = useAuthStore();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -62,7 +62,12 @@ const Signin = () => {
               }
             />
           </label>
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isSigningIn}
+          >
+            {isSigningIn && <Loader2 className="animate-spin" />}
             Sign In
           </button>
         </form>
