@@ -4,14 +4,17 @@ import { formatTime } from "../utils/dateformat";
 const ChatSelected = () => {
   const { messages, selectedUser } = useMessageStore();
   const { userAuth } = useAuthStore();
-  console.log("messages", messages);
+  console.log("messages:", messages, "AuthUser:", userAuth);
   return (
     <div className="w-full h-full p-5">
       {messages.map((message) => (
         <div
           key={message._id}
           className={`chat ${
-            userAuth._id === message.senderId ? "chat-end" : "chat-start"
+            userAuth?.userId === message.senderId ||
+            userAuth?.user?._id === message.senderId
+              ? "chat-end"
+              : "chat-start"
           } `}
         >
           <div className="chat-image avatar">
@@ -23,12 +26,20 @@ const ChatSelected = () => {
             </div>
           </div>
           <div className="chat-header">
-            {selectedUser.fullname}
             <time className="text-xs opacity-50">
               {formatTime(message.createdAt)}
             </time>
           </div>
-          <div className="chat-bubble">{message.text}</div>
+          <div
+            className={`chat-bubble ${
+              userAuth?.userId === message.senderId ||
+              userAuth?.user?._id === message.senderId
+                ? "bg-primary"
+                : ""
+            }`}
+          >
+            {message.text}
+          </div>
           <div className="chat-footer opacity-50">Delivered</div>
         </div>
       ))}

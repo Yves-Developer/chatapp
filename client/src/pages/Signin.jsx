@@ -13,7 +13,7 @@ const Signin = () => {
   const validateFields = () => {
     if (!formData.email) toast.error("Email is required");
     if (!formData.password) toast.error("Password is required");
-    return true;
+    return formData.email && formData.password;
   };
   const handleSunmit = (e) => {
     e.preventDefault();
@@ -62,7 +62,7 @@ const Signin = () => {
               }
             />
           </label>
-          <button type="sumbit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary">
             Sign In
           </button>
         </form>
