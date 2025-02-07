@@ -4,6 +4,7 @@ import DecorativeGrid from "../components/DecorativeGrid";
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 const Signup = () => {
   const [formData, setFormData] = useState({
     fullname: "",
@@ -86,6 +87,12 @@ const Signup = () => {
             Sign Up
           </button>
         </form>
+        <div className="mt-3 flex items-center gap-2">
+          <p className="text-sm text-zinc-400">Already have account?</p>{" "}
+          <Link to="/signin" className="text-primary">
+            Sign In
+          </Link>
+        </div>
       </div>
       {/* Right */}
       <DecorativeGrid

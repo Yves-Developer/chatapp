@@ -6,22 +6,15 @@ import ChatHeader from "../components/ChatHeader";
 import NoChatSelected from "../components/NoChatSelected";
 import { useMessageStore } from "../store/useMessageStore";
 const HomePage = () => {
-  const { messages, getMessages, selectedUser } = useMessageStore();
-  useEffect(() => {
-    if (selectedUser?._id) {
-      getMessages(selectedUser._id);
-      console.log("In if:", selectedUser._id);
-    }
-    console.log(selectedUser, messages);
-  }, [selectedUser, getMessages]);
+  const { selectedUser } = useMessageStore();
   return (
     <div className="h-screen bg-base-200">
       <div className="flex justify-center items-center pt-[8px] px-4">
-        <div className="bg-base-100 rounded-md shadow-md w-full h-[calc(100vh-6rem)]">
+        <div className="bg-base-100 rounded-md shadow-md w-full h-[calc(100vh-2rem)]">
           <div className="flex h-full overflow-hidden rounded-md">
             <SideBar />
             {selectedUser ? (
-              <div className="w-full h-full flex flex-1 flex-col overflow-auto">
+              <div className="w-full h-full flex flex-1 flex-col">
                 <ChatHeader />
                 <ChatSelected />
                 <MessageInput />

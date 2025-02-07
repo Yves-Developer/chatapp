@@ -2,9 +2,30 @@ import { Loader2 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMessageStore } from "../store/useMessageStore";
 import { formatTime } from "../utils/dateformat";
+import { useEffect, useRef } from "react";
 const ChatSelected = () => {
-  const { messages, isGettingMsg } = useMessageStore();
+  const messageEndRef = useRef(null);
   const { userAuth } = useAuthStore();
+  const {
+    messages,
+    isGettingMsg,
+    getMessages,
+    selectedUser,
+    subscribeToMessage,
+    unsubscribeFromMessage,
+  } = useMessageStore();
+
+  useEffect(() => {
+    if (selectedUser?._id) getMessages(selectedUser?._id);
+    subscribeToMessage();
+    return () => unsubscribeFromMessage();
+  }, [selectedUser, getMessages, subscribeToMessage, unsubscribeFromMessage]);
+
+  useEffect(() => {
+    if (messages && messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behaviour: "smooth" });
+    }
+  }, [messages]);
   if (isGettingMsg) {
     return (
       <div className="w-full h-full p-5 flex justify-center items-center">
@@ -13,7 +34,7 @@ const ChatSelected = () => {
     );
   }
   return (
-    <div className="w-full h-full p-5">
+    <div className="w-full flex flex-col flex-1 overflow-y-auto p-5">
       {messages.map((message) => (
         <div
           key={message._id}
@@ -50,6 +71,9 @@ const ChatSelected = () => {
           <div className="chat-footer opacity-50">Delivered</div>
         </div>
       ))}
+
+      {/* Scroll To bottom */}
+      <div ref={messageEndRef} />
       {/* <div className="chat chat-end">
         <div className="chat-image avatar">
           <div className="w-10 rounded-full">

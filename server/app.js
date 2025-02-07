@@ -1,6 +1,6 @@
 import express from "express";
-import authRoutes from "./src/routes/auth.route.js";
-import messageRoutes from "./src/routes/message.route.js";
+import authRoutes from "./routes/auth.route.js";
+import messageRoutes from "./routes/message.route.js";
 import { connectDB } from "./lib/connectDB.js";
 import cookieParser from "cookie-parser";
 import { app, server } from "./lib/socket.js";

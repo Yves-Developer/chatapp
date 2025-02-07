@@ -10,11 +10,11 @@ export const useAuthStore = create((set, get) => ({
   isSigningIn: null,
   userAuth: null,
   isCheckingAuth: null,
-  socket: null, // store socket instance in state
+  socket: null,
+  onlineUsers: [],
 
   checkUserAuth: async () => {
     set({ isCheckingAuth: true });
-    const { userAuth } = get();
     try {
       const res = await axiosInstance.get("/auth/check");
       if (res.data) {
@@ -80,18 +80,16 @@ export const useAuthStore = create((set, get) => ({
 
   connectSocket: () => {
     const { userAuth, socket } = get();
-    // Only connect if there's no active socket connection
     if (!userAuth || socket?.connected) return;
-
     const newSocket = io(BASE_URL, {
       withCredentials: true,
+      query: { userId: userAuth?.userId || userAuth?.user?._id },
     });
 
-    // Save the socket instance to the state
     set({ socket: newSocket });
 
-    newSocket.on("connect", () => {
-      console.log("Socket connected with ID:", newSocket.id);
+    newSocket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
     });
 
     newSocket.on("disconnect", () => {

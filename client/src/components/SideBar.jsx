@@ -1,11 +1,17 @@
 import { Loader2, Users } from "lucide-react";
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "./Avatar";
 import { useMessageStore } from "../store/useMessageStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 const SideBar = () => {
   const { users, getUsers, selectedUser, setSelectedUser, isGettingUser } =
     useMessageStore();
+  const { onlineUsers } = useAuthStore();
+  const [showOnlineUsers, setShowOnlineUsers] = useState(false);
+  const filteredUsers = showOnlineUsers
+    ? users.filter((user) => onlineUsers.includes(user._id))
+    : users;
   useEffect(() => {
     getUsers();
   }, [getUsers]);
@@ -24,9 +30,23 @@ const SideBar = () => {
           <Users size={20} />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
+        <div className="mt-3 hidden lg:flex items-center gap-2">
+          <label className="cursor-pointer flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showOnlineUsers}
+              onChange={(e) => setShowOnlineUsers(e.target.checked)}
+              className="checkbox checkbox-sm"
+            />
+            <span className="text-sm">Online Only</span>
+          </label>
+          <span className="text-xs text-zinc-500">
+            ({onlineUsers.length - 1} Online)
+          </span>
+        </div>
       </div>
       <div className="w-full h-full overflow-y-auto py-3">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <button
             key={user._id}
             onClick={() => setSelectedUser(user)}
@@ -36,10 +56,15 @@ const SideBar = () => {
                 : ""
             }`}
           >
-            <Avatar imgUrl="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+            <Avatar
+              imgUrl="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+              userData={user?._id}
+            />
             <div className="text-left hidden lg:block min-w-0">
               <p className="font-medium truncate">{user.fullname}</p>
-              <p className="text-sm text-base-content/10">Online</p>
+              <p className="text-sm text-base-content/10">
+                {onlineUsers?.includes(user?._id) ? "Online" : "Offfline"}
+              </p>
             </div>
           </button>
         ))}

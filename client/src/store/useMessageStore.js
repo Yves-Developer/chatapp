@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import axiosInstance from "../lib/axiosInstance";
 import toast from "react-hot-toast";
+import { useAuthStore } from "./useAuthStore";
+
 export const useMessageStore = create((set, get) => ({
   messages: [],
   users: [],
@@ -8,6 +10,7 @@ export const useMessageStore = create((set, get) => ({
   isSendingMsg: null,
   isGettingMsg: null,
   isGettingUser: null,
+
   getUsers: async () => {
     set({ isGettingUser: true });
     try {
@@ -19,6 +22,7 @@ export const useMessageStore = create((set, get) => ({
       set({ isGettingUser: false });
     }
   },
+
   getMessages: async (userId) => {
     set({ isGettingMsg: true });
     try {
@@ -30,6 +34,7 @@ export const useMessageStore = create((set, get) => ({
       set({ isGettingMsg: false });
     }
   },
+
   sendMessage: async (messageData) => {
     set({ isSendingMsg: true });
     const { selectedUser, messages } = get();
@@ -45,5 +50,23 @@ export const useMessageStore = create((set, get) => ({
       set({ isSendingMsg: false });
     }
   },
+
+  subscribeToMessage: () => {
+    const socket = useAuthStore.getState().socket; // Access socket using getState()
+    const selectedUser = get().selectedUser; // Access selectedUser here
+    if (selectedUser) console.log("slectedUser found");
+    if (!selectedUser) return; // If no selected user, return early
+
+    socket.on("newMessage", (sentMessage) => {
+      if (sentMessage.senderId !== selectedUser._id) return;
+      set({ messages: [...get().messages, sentMessage] });
+    });
+  },
+
+  unsubscribeFromMessage: () => {
+    const socket = useAuthStore.getState().socket; // Access socket using getState()
+    socket.off("newMessage");
+  },
+
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));

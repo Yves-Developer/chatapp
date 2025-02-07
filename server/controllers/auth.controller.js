@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
-import { encryptPassword } from "../../utils/hashPassword.js";
-import { jwtokenAndSetCookie } from "../../utils/jwtokenAndsetCookie.js";
+import { encryptPassword } from "../utils/hashPassword.js";
+import { jwtokenAndSetCookie } from "../utils/jwtokenAndsetCookie.js";
 import bcrypt from "bcryptjs";
 
 // Sign Up Controllers
