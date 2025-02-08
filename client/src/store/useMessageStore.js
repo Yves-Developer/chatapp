@@ -54,11 +54,12 @@ export const useMessageStore = create((set, get) => ({
   subscribeToMessage: () => {
     const socket = useAuthStore.getState().socket; // Access socket using getState()
     const selectedUser = get().selectedUser; // Access selectedUser here
-    if (selectedUser) console.log("slectedUser found");
     if (!selectedUser) return; // If no selected user, return early
 
     socket.on("newMessage", (sentMessage) => {
       if (sentMessage.senderId !== selectedUser._id) return;
+      const sound = new Audio("/sounds/notification.mp3");
+      sound.play();
       set({ messages: [...get().messages, sentMessage] });
     });
   },
