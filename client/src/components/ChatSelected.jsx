@@ -15,7 +15,6 @@ const ChatSelected = () => {
     unsubscribeFromMessage,
     isTyping,
   } = useMessageStore();
-
   useEffect(() => {
     if (selectedUser?._id) getMessages(selectedUser?._id);
     subscribeToMessage();
@@ -26,7 +25,7 @@ const ChatSelected = () => {
     if (messages && messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behaviour: "smooth" });
     }
-  }, [messages]);
+  }, [messages, isTyping]);
   if (isGettingMsg) {
     return (
       <div className="w-full h-full p-5 flex justify-center items-center">
@@ -73,7 +72,26 @@ const ChatSelected = () => {
         </div>
       ))}
       {/* User is typing */}
-      {selectedUser && isTyping[selectedUser._id] && <p>Typing...</p>}
+
+      {selectedUser && isTyping[selectedUser._id] && (
+        <div className="chat chat-start">
+          <div className="chat-image avatar">
+            <div className="w-10 rounded-full">
+              <img
+                alt="Tailwind CSS chat bubble component"
+                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+              />
+            </div>
+          </div>
+          <div className="chat-bubble">
+            <div class="flex items-center space-x-1">
+              <div class="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse"></div>
+              <div class="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse delay-200"></div>
+              <div class="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse delay-400"></div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Scroll To bottom */}
       <div ref={messageEndRef} />
       {/* <div className="chat chat-end">

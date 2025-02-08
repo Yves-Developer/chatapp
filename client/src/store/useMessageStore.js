@@ -67,7 +67,7 @@ export const useMessageStore = create((set, get) => ({
     // Listen for typing events
     socket.on("userTyping", ({ senderId }) => {
       set((state) => ({
-        isTypingUsers: { ...state.isTyping, [senderId]: true },
+        isTyping: { ...state.isTyping, [senderId]: true },
       }));
     });
     //Listen for stop styping
@@ -90,12 +90,11 @@ export const useMessageStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     const { selectedUser } = get();
     if (!selectedUser) return;
-
     socket.emit("typing", { receiverId: selectedUser._id });
 
     setTimeout(() => {
       socket.emit("stopTyping", { receiverId: selectedUser._id });
-    }, 3000);
+    }, 2000);
   },
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));
