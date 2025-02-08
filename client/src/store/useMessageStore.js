@@ -95,7 +95,7 @@ export const useMessageStore = create((set, get) => ({
 
     setTimeout(() => {
       socket.emit("stopTyping", { receiverId: selectedUser._id });
-    }, 1000);
+    }, 3000);
   },
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));

@@ -27,10 +27,6 @@ io.on("connection", (socket) => {
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   //Listening to typing Event
-  socket.on("typing", (receiverId) => {
-    const receiverSocketId = userSocketMap[receiverId];
-    io.to(receiverSocketId).emit("userTyping", userId);
-  });
   socket.on("typing", ({ receiverId }) => {
     const receiverSocketId = userSocketMap[receiverId];
     if (receiverSocketId) {
