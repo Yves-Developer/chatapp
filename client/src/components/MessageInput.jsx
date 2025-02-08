@@ -30,9 +30,9 @@ const MessageInput = () => {
             disabled={isSendingMsg}
           >
             {isSendingMsg ? (
-              <Send size={20} />
-            ) : (
               <Loader2 className="animate-spin" />
+            ) : (
+              <Send size={20} />
             )}
           </button>
         </div>
