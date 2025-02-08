@@ -17,8 +17,9 @@ export const getUserToChat = async (req, res) => {
 export const getMessagesById = async (req, res) => {
   try {
     const { id: userToChat } = req.params;
+
     const myId = req.userId.userId;
-    console.log(myId, "---", userToChat);
+
     const chatMessage = await Message.find({
       $or: [
         { senderId: myId, receiverId: userToChat },
@@ -28,7 +29,6 @@ export const getMessagesById = async (req, res) => {
 
     return res.status(200).json(chatMessage);
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

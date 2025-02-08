@@ -13,6 +13,7 @@ const ChatSelected = () => {
     selectedUser,
     subscribeToMessage,
     unsubscribeFromMessage,
+    isTyping,
   } = useMessageStore();
 
   useEffect(() => {
@@ -71,7 +72,8 @@ const ChatSelected = () => {
           <div className="chat-footer opacity-50">Delivered</div>
         </div>
       ))}
-
+      {/* User is typing */}
+      {selectedUser && isTyping[selectedUser._id] && <p>Typing...</p>}
       {/* Scroll To bottom */}
       <div ref={messageEndRef} />
       {/* <div className="chat chat-end">

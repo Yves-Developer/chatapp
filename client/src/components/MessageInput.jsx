@@ -2,7 +2,7 @@ import { Image, Loader2, Send } from "lucide-react";
 import { useMessageStore } from "../store/useMessageStore";
 import { useState } from "react";
 const MessageInput = () => {
-  const { sendMessage, isSendingMsg } = useMessageStore();
+  const { sendMessage, isSendingMsg, emitTypingEvent } = useMessageStore();
   const [text, setText] = useState("");
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -18,7 +18,10 @@ const MessageInput = () => {
           <input
             type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              emitTypingEvent();
+            }}
             className="w-full input input-bordered roundered-lg input-sm ms:input-md"
             placeholder="Type a message..."
           />
