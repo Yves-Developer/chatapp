@@ -1,11 +1,12 @@
-import { Image, Send } from "lucide-react";
+import { Image, Loader2, Send } from "lucide-react";
 import { useMessageStore } from "../store/useMessageStore";
 import { useState } from "react";
 const MessageInput = () => {
-  const { sendMessage } = useMessageStore();
+  const { sendMessage, isSendingMsg } = useMessageStore();
   const [text, setText] = useState("");
   const handleSendMessage = (e) => {
     e.preventDefault();
+    if (!text) return;
     sendMessage({ text: text.trim() });
     // reset text
     setText("");
@@ -24,8 +25,15 @@ const MessageInput = () => {
           <button className="sm:flex btn btn-square text-zinc-400">
             <Image size={20} />
           </button>
-          <button className="sm:flex btn btn-square text-zinc-400">
-            <Send size={20} />
+          <button
+            className="sm:flex btn btn-square text-zinc-400"
+            disabled={isSendingMsg}
+          >
+            {isSendingMsg ? (
+              <Send size={20} />
+            ) : (
+              <Loader2 className="animate-spin" />
+            )}
           </button>
         </div>
       </form>
