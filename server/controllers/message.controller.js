@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
-import { getReceiverSocketId, io } from "../lib/socket.js";
+import { getReceiverSocketId, getActiveChat, io } from "../lib/socket.js";
 export const getUserToChat = async (req, res) => {
   try {
     const myId = req.userId.userId;
@@ -9,7 +9,6 @@ export const getUserToChat = async (req, res) => {
     );
     return res.status(200).json(filteredUsers);
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -19,16 +18,51 @@ export const getMessagesById = async (req, res) => {
     const { id: userToChat } = req.params;
 
     const myId = req.userId.userId;
-
+    const receiverSocketId = getReceiverSocketId(userToChat);
+    const senderSocketId = getReceiverSocketId(myId);
     const chatMessage = await Message.find({
       $or: [
         { senderId: myId, receiverId: userToChat },
         { senderId: userToChat, receiverId: myId },
       ],
     });
+    const unSeenMessageIds = [];
+    chatMessage.forEach((message) => {
+      if (
+        message.status !== "seen" &&
+        String(message.senderId) === String(userToChat)
+      ) {
+        message.status = "seen";
+        unSeenMessageIds.push(message._id);
+      }
+    });
+    console.log("seen Id:", unSeenMessageIds);
+    if (unSeenMessageIds.length > 0) {
+      await Message.updateMany(
+        {
+          _id: { $in: unSeenMessageIds },
+        },
+        { $set: { status: "seen" } }
+      );
 
+      const seenMessage = await Message.find({
+        $or: [
+          { senderId: myId, receiverId: userToChat },
+          { senderId: userToChat, receiverId: myId },
+        ],
+      });
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("messageSeen", seenMessage);
+        console.log("realTime", seenMessage[seenMessage.length - 1].status);
+      }
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messageSeen", seenMessage);
+        console.log("realTime", seenMessage[seenMessage.length - 1].status);
+      }
+    }
     return res.status(200).json(chatMessage);
   } catch (error) {
+    console.log("Error in getting messages:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -38,16 +72,31 @@ export const sendMessagesById = async (req, res) => {
     const { text } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.userId.userId;
+    const receiverSocketId = getReceiverSocketId(receiverId);
+
     const sentMessage = new Message({
       senderId,
       receiverId,
       text,
+      status: receiverSocketId ? "Delivered" : "sent",
     });
 
     await sentMessage.save();
-    const receiverSocketId = getReceiverSocketId(receiverId);
+
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", sentMessage);
+    }
+    // ✅ Mark message as "Seen" only if both users have selected each other
+    if (
+      getActiveChat(senderId) === receiverId &&
+      getActiveChat(receiverId) === senderId
+    ) {
+      sentMessage.status = "Seen";
+      await sentMessage.save();
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("messageSeen", [sentMessage]);
+      }
     }
     return res.status(200).json(sentMessage);
   } catch (error) {

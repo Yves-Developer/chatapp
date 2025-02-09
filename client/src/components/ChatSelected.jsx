@@ -17,10 +17,11 @@ const ChatSelected = () => {
   } = useMessageStore();
   useEffect(() => {
     if (selectedUser?._id) getMessages(selectedUser?._id);
+  }, [selectedUser]);
+  useEffect(() => {
     subscribeToMessage();
     return () => unsubscribeFromMessage();
-  }, [selectedUser, getMessages, subscribeToMessage, unsubscribeFromMessage]);
-
+  }, [selectedUser, messages.status]);
   useEffect(() => {
     if (messages && messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behaviour: "smooth" });
@@ -68,7 +69,12 @@ const ChatSelected = () => {
           >
             {message.text}
           </div>
-          <div className="chat-footer opacity-50">Delivered</div>
+          <div className="chat-footer opacity-50">
+            {userAuth?.userId === message.senderId ||
+            userAuth?.user?._id === message.senderId
+              ? message.status
+              : ""}
+          </div>
         </div>
       ))}
       {/* User is typing */}
@@ -84,10 +90,10 @@ const ChatSelected = () => {
             </div>
           </div>
           <div className="chat-bubble">
-            <div class="flex items-center space-x-1">
-              <div class="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse"></div>
-              <div class="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse delay-200"></div>
-              <div class="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse delay-400"></div>
+            <div className="flex items-center space-x-1">
+              <div className="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse"></div>
+              <div className="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse delay-200"></div>
+              <div className="dot w-2.5 h-2.5 bg-gray-400 rounded-full animate-pulse delay-400"></div>
             </div>
           </div>
         </div>

@@ -61,17 +61,41 @@ export const useMessageStore = create((set, get) => ({
       if (sentMessage.senderId !== selectedUser._id) return;
       const sound = new Audio("/sounds/notification.mp3");
       sound.play();
-      set({ messages: [...get().messages, sentMessage] });
+      set((state) => ({ messages: [...state.messages, sentMessage] }));
     });
+
+    socket.on("messageSeen", (seenMessage) => {
+      console.log("message:", seenMessage);
+      set((state) => ({
+        messages: state.messages.map((msg) => {
+          const seenMsg = seenMessage.find((m) => m._id === msg._id);
+          return seenMsg ? { ...msg, status: seenMsg.status } : msg;
+        }),
+      }));
+    });
+    var typingSound = new Audio("/sounds/typing.mp3");
+    typingSound.loop = true; // Ensure it plays continuously while typing
 
     // Listen for typing events
     socket.on("userTyping", ({ senderId }) => {
+      if (typingSound.paused) {
+        typingSound
+          .play()
+          .catch((err) => console.error("Audio play failed:", err));
+      }
+
       set((state) => ({
         isTyping: { ...state.isTyping, [senderId]: true },
       }));
     });
-    //Listen for stop styping
+
+    // Listen for stop typing
     socket.on("stoppedTyping", ({ senderId }) => {
+      if (!typingSound.paused) {
+        typingSound.pause();
+        typingSound.currentTime = 0; // Reset to start
+      }
+
       set((state) => {
         const updatedTyping = { ...state.isTyping };
         delete updatedTyping[senderId];
@@ -96,5 +120,16 @@ export const useMessageStore = create((set, get) => ({
       socket.emit("stopTyping", { receiverId: selectedUser._id });
     }, 2000);
   },
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => {
+    set({ selectedUser });
+    const socket = useAuthStore.getState().socket;
+    const myId =
+      useAuthStore.getState().userAuth?.user?._id ||
+      useAuthStore.getState().userAuth?.userId;
+    console.log(useAuthStore.getState().userAuth?.user?._id);
+
+    if (selectedUser) {
+      socket.emit("activeChat", { userId: myId, chatWith: selectedUser._id });
+    }
+  },
 }));

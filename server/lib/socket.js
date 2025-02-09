@@ -11,21 +11,26 @@ const io = new Server(server, {
   },
 });
 const userSocketMap = {};
-
+const activeChats = new Map(); // Store which users are chatting
 export const getReceiverSocketId = (userId) => {
   return userSocketMap[userId];
 };
-
+export const getActiveChat = (userId) => {
+  return activeChats.get(userId) || null;
+};
 // Listening to new connection
 io.on("connection", (socket) => {
-  console.log("User Connected:", socket.id);
   const userId = socket.handshake.query.userId;
 
   userSocketMap[userId] = socket.id;
 
   //Broadcast Online users to all Users
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
+  // Listen for when a user selects a chat
+  socket.on("activeChat", ({ userId, chatWith }) => {
+    activeChats.set(userId, chatWith);
+    console.log(`User ${userId} is chatting with ${chatWith}`);
+  });
   //Listening to typing Event
   socket.on("typing", ({ receiverId }) => {
     const receiverSocketId = userSocketMap[receiverId];
@@ -45,7 +50,6 @@ io.on("connection", (socket) => {
 
   // Handle user disconnect
   socket.on("disconnect", () => {
-    console.log("User Disconnect:", socket.id);
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
