@@ -26,21 +26,20 @@ export const getMessagesById = async (req, res) => {
         { senderId: userToChat, receiverId: myId },
       ],
     });
-    const unSeenMessageIds = [];
+    const seenMessageIds = [];
     chatMessage.forEach((message) => {
       if (
         message.status !== "seen" &&
         String(message.senderId) === String(userToChat)
       ) {
         message.status = "seen";
-        unSeenMessageIds.push(message._id);
+        seenMessageIds.push(message._id);
       }
     });
-    console.log("seen Id:", unSeenMessageIds);
-    if (unSeenMessageIds.length > 0) {
+    if (seenMessageIds.length > 0) {
       await Message.updateMany(
         {
-          _id: { $in: unSeenMessageIds },
+          _id: { $in: seenMessageIds },
         },
         { $set: { status: "seen" } }
       );
@@ -51,13 +50,13 @@ export const getMessagesById = async (req, res) => {
           { senderId: userToChat, receiverId: myId },
         ],
       });
+
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("messageSeen", seenMessage);
-        console.log("realTime", seenMessage[seenMessage.length - 1].status);
       }
+
       if (senderSocketId) {
         io.to(senderSocketId).emit("messageSeen", seenMessage);
-        console.log("realTime", seenMessage[seenMessage.length - 1].status);
       }
     }
     return res.status(200).json(chatMessage);

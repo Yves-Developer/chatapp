@@ -20,6 +20,7 @@ export const getActiveChat = (userId) => {
 };
 // Listening to new connection
 io.on("connection", (socket) => {
+  console.log("user connected!");
   const userId = socket.handshake.query.userId;
 
   userSocketMap[userId] = socket.id;
@@ -50,6 +51,7 @@ io.on("connection", (socket) => {
 
   // Handle user disconnect
   socket.on("disconnect", () => {
+    console.log("user Disconnected");
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });

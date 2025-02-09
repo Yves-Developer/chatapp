@@ -53,9 +53,9 @@ export const useMessageStore = create((set, get) => ({
   },
 
   subscribeToMessage: () => {
-    const socket = useAuthStore.getState().socket; // Access socket using getState()
-    const selectedUser = get().selectedUser; // Access selectedUser here
-    if (!selectedUser) return; // If no selected user, return early
+    const socket = useAuthStore.getState().socket;
+    const selectedUser = get().selectedUser;
+    if (!selectedUser) return;
 
     socket.on("newMessage", (sentMessage) => {
       if (sentMessage.senderId !== selectedUser._id) return;
@@ -65,7 +65,6 @@ export const useMessageStore = create((set, get) => ({
     });
 
     socket.on("messageSeen", (seenMessage) => {
-      console.log("message:", seenMessage);
       set((state) => ({
         messages: state.messages.map((msg) => {
           const seenMsg = seenMessage.find((m) => m._id === msg._id);
@@ -74,10 +73,11 @@ export const useMessageStore = create((set, get) => ({
       }));
     });
     var typingSound = new Audio("/sounds/typing.mp3");
-    typingSound.loop = true; // Ensure it plays continuously while typing
+    typingSound.loop = true;
 
     // Listen for typing events
     socket.on("userTyping", ({ senderId }) => {
+      if (senderId !== selectedUser._id) return;
       if (typingSound.paused) {
         typingSound
           .play()
