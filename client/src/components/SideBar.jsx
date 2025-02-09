@@ -1,4 +1,4 @@
-import { Loader2, Users } from "lucide-react";
+import { CornerDownLeft, Loader2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import Avatar from "./Avatar";
 import { useMessageStore } from "../store/useMessageStore";
@@ -24,13 +24,17 @@ const SideBar = () => {
     );
   }
   return (
-    <div className="h-full w-20 lg:w-57 border-r border-base-300 flex flex-col">
+    <div
+      className={`h-full max-sm:w-full max-sm:${
+        selectedUser ? "hidden" : "block"
+      } w-57 border-r border-base-300 flex flex-col`}
+    >
       <div className="w-full border-b border-base-300 p-5">
         <div className="flex items-center gap-2">
           <Users size={20} />
-          <span className="font-medium hidden lg:block">Contacts</span>
+          <span className="font-medium">Contacts</span>
         </div>
-        <div className="mt-3 hidden lg:flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
               type="checkbox"
@@ -60,7 +64,7 @@ const SideBar = () => {
               imgUrl="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
               userData={user?._id}
             />
-            <div className="text-left hidden lg:block min-w-0">
+            <div className="text-left min-w-0">
               <p className="font-medium truncate">{user.fullname}</p>
               <p className="text-sm text-base-content/10">
                 {onlineUsers?.includes(user?._id) ? "Online" : "Offfline"}
@@ -68,6 +72,9 @@ const SideBar = () => {
             </div>
           </button>
         ))}
+        {filteredUsers.length === 0 && (
+          <p className="ml-5 text-zinc-500">No Active User.</p>
+        )}
       </div>
     </div>
   );

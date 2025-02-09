@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 const Navbar = () => {
   const { userAuth, logOut } = useAuthStore();
   return (
-    <div className="navbar bg-base-100 shadow-sm">
+    <div className="navbar bg-base-100 shadow-sm px-4">
       <div className="flex-none">
         <div className="w-[40px] bg-primary/10 p-2 rounded-sm">
           <img src="/paper-plane.svg" alt="icon" />

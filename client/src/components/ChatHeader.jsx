@@ -1,7 +1,6 @@
-import { X } from "lucide-react";
+import { X, CornerDownLeft } from "lucide-react";
 import Avatar from "./Avatar";
 import { useMessageStore } from "../store/useMessageStore";
-import { useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 //todo:online USER
 const ChatHeader = () => {
@@ -21,7 +20,16 @@ const ChatHeader = () => {
           </p>
         </div>
       </div>
-      <button onClick={() => setSelectedUser(null)} className="text-zinc-400">
+      <button
+        onClick={() => setSelectedUser(null)}
+        className="block lg:hidden  text-zinc-400 mr-4 bg-primary/10 p-2 rounded-sm hover:text-white cursor-pointer"
+      >
+        <CornerDownLeft size="20" />
+      </button>
+      <button
+        onClick={() => setSelectedUser(null)}
+        className="hidden lg:block text-zinc-400 mr-4 bg-primary/10 p-2 rounded-sm hover:text-white cursor-pointer"
+      >
         <X size={20} />
       </button>
     </div>

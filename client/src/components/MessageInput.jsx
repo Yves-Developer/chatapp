@@ -25,11 +25,11 @@ const MessageInput = () => {
             className="w-full input input-bordered roundered-lg input-sm ms:input-md"
             placeholder="Type a message..."
           />
-          <button className="sm:flex btn btn-square text-zinc-400">
+          <button className="sm:flex text-zinc-400 bg-primary/10 p-2 rounded-sm hover:text-white cursor-pointer">
             <Image size={20} />
           </button>
           <button
-            className="sm:flex btn btn-square text-zinc-400"
+            className="sm:flex text-zinc-400 bg-primary/10 p-2 rounded-sm hover:text-white cursor-pointer"
             disabled={isSendingMsg}
           >
             {isSendingMsg ? (
