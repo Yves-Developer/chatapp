@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, getActiveChat, io } from "../lib/socket.js";
+
 export const getUserToChat = async (req, res) => {
   try {
     const myId = req.userId.userId;
@@ -20,14 +21,16 @@ export const getMessagesById = async (req, res) => {
     const myId = req.userId.userId;
     const receiverSocketId = getReceiverSocketId(userToChat);
     const senderSocketId = getReceiverSocketId(myId);
-    const chatMessage = await Message.find({
+
+    const chatMessages = await Message.find({
       $or: [
         { senderId: myId, receiverId: userToChat },
         { senderId: userToChat, receiverId: myId },
       ],
     });
+
     const seenMessageIds = [];
-    chatMessage.forEach((message) => {
+    chatMessages.forEach((message) => {
       if (
         message.status !== "seen" &&
         String(message.senderId) === String(userToChat)
@@ -36,6 +39,7 @@ export const getMessagesById = async (req, res) => {
         seenMessageIds.push(message._id);
       }
     });
+
     if (seenMessageIds.length > 0) {
       await Message.updateMany(
         {
@@ -44,22 +48,23 @@ export const getMessagesById = async (req, res) => {
         { $set: { status: "seen" } }
       );
 
-      const seenMessage = await Message.find({
+      const seenMessages = await Message.find({
         $or: [
           { senderId: myId, receiverId: userToChat },
           { senderId: userToChat, receiverId: myId },
         ],
       });
 
+      // Emit seen message to both users if their socket IDs are available
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("messageSeen", seenMessage);
+        io.to(receiverSocketId).emit("messageSeen", seenMessages);
       }
 
       if (senderSocketId) {
-        io.to(senderSocketId).emit("messageSeen", seenMessage);
+        io.to(senderSocketId).emit("messageSeen", seenMessages);
       }
     }
-    return res.status(200).json(chatMessage);
+    return res.status(200).json(chatMessages);
   } catch (error) {
     console.log("Error in getting messages:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -73,33 +78,49 @@ export const sendMessagesById = async (req, res) => {
     const senderId = req.userId.userId;
     const receiverSocketId = getReceiverSocketId(receiverId);
 
-    const sentMessage = new Message({
+    // Default message status is "Sent"
+    let status = "Sent";
+
+    // If the receiver is online, mark as "Delivered"
+    if (receiverSocketId) {
+      status = "Delivered";
+    }
+
+    // Create and save the message
+    let sentMessage = await new Message({
       senderId,
       receiverId,
       text,
-      status: receiverSocketId ? "Delivered" : "sent",
-    });
+      status,
+    }).save();
 
-    await sentMessage.save();
-
+    // Emit "newMessage" event to receiver if they are online
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", sentMessage);
     }
-    // ✅ Mark message as "Seen" only if both users have selected each other
+
+    // ✅ Update message status to "Seen" only if both users have selected each other for active chat
     if (
       getActiveChat(senderId) === receiverId &&
       getActiveChat(receiverId) === senderId
     ) {
       sentMessage.status = "Seen";
-      await sentMessage.save();
+      await sentMessage.save(); // Save only when status changes to "Seen"
 
+      // Emit "messageSeen" event to both sender and receiver if they are online
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("messageSeen", [sentMessage]);
       }
+
+      const senderSocketId = getReceiverSocketId(senderId); // Get sender socket ID
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messageSeen", [sentMessage]);
+      }
     }
+
     return res.status(200).json(sentMessage);
   } catch (error) {
-    console.log(error.message);
+    console.error(error.message);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -10,14 +10,18 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
 const userSocketMap = {};
 const activeChats = new Map(); // Store which users are chatting
+
 export const getReceiverSocketId = (userId) => {
   return userSocketMap[userId];
 };
+
 export const getActiveChat = (userId) => {
   return activeChats.get(userId) || null;
 };
+
 // Listening to new connection
 io.on("connection", (socket) => {
   console.log("user connected!");
@@ -25,26 +29,32 @@ io.on("connection", (socket) => {
 
   userSocketMap[userId] = socket.id;
 
-  //Broadcast Online users to all Users
+  // Broadcast Online users to all Users
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
   // Listen for when a user selects a chat
   socket.on("activeChat", ({ userId, chatWith }) => {
-    activeChats.set(userId, chatWith);
-    console.log(`User ${userId} is chatting with ${chatWith}`);
+    if (chatWith === null) {
+      activeChats.delete(userId);
+      console.log(`User ${userId} has stopped chatting`);
+    } else {
+      activeChats.set(userId, chatWith._id);
+      console.log(`User ${userId} is chatting with ${chatWith._id}`);
+    }
   });
-  //Listening to typing Event
+
+  // Listening to typing Event
   socket.on("typing", ({ receiverId }) => {
     const receiverSocketId = userSocketMap[receiverId];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("userTyping", { senderId: userId });
     }
   });
-  //listen for stop typing
+
+  // Listen for stop typing
   socket.on("stopTyping", ({ receiverId }) => {
     const receiverSocketId = userSocketMap[receiverId];
-
     if (receiverSocketId) {
-      // Send stop typing event to the receiver
       io.to(receiverSocketId).emit("stoppedTyping", { senderId: userId });
     }
   });
@@ -53,6 +63,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("user Disconnected");
     delete userSocketMap[userId];
+    activeChats.delete(userId); // Clean up the active chat when the user disconnects
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });

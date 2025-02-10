@@ -4,7 +4,7 @@ import { useMessageStore } from "../store/useMessageStore";
 import { useAuthStore } from "../store/useAuthStore";
 //todo:online USER
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser } = useMessageStore();
+  const { selectedUser, setSelectedUser, isTyping } = useMessageStore();
   const { onlineUsers } = useAuthStore();
   return (
     <div className="w-full border-b border-base-200 flex items-center justify-between p-2">
@@ -16,7 +16,11 @@ const ChatHeader = () => {
         <div className="text-left min-w-0">
           <p className="font-medium truncate">{selectedUser?.fullname}</p>
           <p className="text-sm text-base-content/10">
-            {onlineUsers?.includes(selectedUser._id) ? "Online" : "Offline"}
+            {isTyping[selectedUser._id]
+              ? "Typing..."
+              : onlineUsers?.includes(selectedUser._id)
+              ? "Online"
+              : "Offline"}
           </p>
         </div>
       </div>
