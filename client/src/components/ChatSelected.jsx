@@ -3,6 +3,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useMessageStore } from "../store/useMessageStore";
 import { formatTime } from "../utils/dateformat";
 import { useEffect, useRef } from "react";
+
 const ChatSelected = () => {
   const messageEndRef = useRef(null);
   const { userAuth } = useAuthStore();
@@ -15,18 +16,25 @@ const ChatSelected = () => {
     unsubscribeFromMessage,
     isTyping,
   } = useMessageStore();
+
+  // When the selected user changes, fetch messages WITHOUT marking them as seen.
   useEffect(() => {
-    if (selectedUser?._id) getMessages(selectedUser?._id);
+    if (selectedUser?._id) {
+      getMessages(selectedUser._id, true);
+    }
   }, [selectedUser]);
+
   useEffect(() => {
     subscribeToMessage();
     return () => unsubscribeFromMessage();
   }, [selectedUser, messages.status]);
+
   useEffect(() => {
     if (messages && messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behaviour: "smooth" });
     }
   }, [messages, isTyping]);
+
   if (isGettingMsg) {
     return (
       <div className="w-full h-full p-5 flex justify-center items-center">
@@ -34,6 +42,7 @@ const ChatSelected = () => {
       </div>
     );
   }
+
   return (
     <div className="w-full flex flex-col flex-1 overflow-y-auto p-5">
       {messages.map((message) => (
@@ -49,7 +58,7 @@ const ChatSelected = () => {
           <div className="chat-image avatar">
             <div className="w-10 rounded-full">
               <img
-                alt="Tailwind CSS chat bubble component"
+                alt="User avatar"
                 src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
               />
             </div>
@@ -77,14 +86,14 @@ const ChatSelected = () => {
           </div>
         </div>
       ))}
-      {/* User is typing */}
 
+      {/* User is typing */}
       {selectedUser && isTyping[selectedUser._id] && (
         <div className="chat chat-start">
           <div className="chat-image avatar">
             <div className="w-10 rounded-full">
               <img
-                alt="Tailwind CSS chat bubble component"
+                alt="User avatar"
                 src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
               />
             </div>
@@ -98,24 +107,8 @@ const ChatSelected = () => {
           </div>
         </div>
       )}
-      {/* Scroll To bottom */}
+      {/* Scroll to bottom */}
       <div ref={messageEndRef} />
-      {/* <div className="chat chat-end">
-        <div className="chat-image avatar">
-          <div className="w-10 rounded-full">
-            <img
-              alt="Tailwind CSS chat bubble component"
-              src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-            />
-          </div>
-        </div>
-        <div className="chat-header">
-          Anakin
-          <time className="text-xs opacity-50">12:46</time>
-        </div>
-        <div className="chat-bubble">I hate you!</div>
-        <div className="chat-footer opacity-50">Seen at 12:46</div>
-      </div> */}
     </div>
   );
 };

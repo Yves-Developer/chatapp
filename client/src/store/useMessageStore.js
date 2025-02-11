@@ -4,24 +4,15 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "./useAuthStore";
 
 export const useMessageStore = create((set, get) => {
-  // Centralized typing sound instance to avoid multiple creations
-  // let typingSound;
-  // fetch("/sounds/typing.mp3")
-  //   .then((res) => res.blob())
-  //   .then((blob) => {
-  //     typingSound = new Audio(URL.createObjectURL(blob));
-  //     typingSound.loop = true;
-  //     typingSound.volume = 0.1;
-  //   })
-  // .catch((err) => console.error("Failed to load typing sound:", err));
-
   return {
     messages: [],
     users: [],
+    unreadMessages: {},
+    unreadMessageCount: {},
     selectedUser: null,
-    isSendingMsg: null,
-    isGettingMsg: null,
-    isGettingUser: null,
+    isSendingMsg: false,
+    isGettingMsg: false,
+    isGettingUser: false,
     isTyping: {},
 
     getUsers: async () => {
@@ -30,24 +21,59 @@ export const useMessageStore = create((set, get) => {
         const res = await axiosInstance.get("/message/users");
         if (res.data) set({ users: res.data });
       } catch (error) {
-        toast.error(error.response.data.message);
+        toast.error(error.response?.data?.message || "Failed to fetch users");
       } finally {
         set({ isGettingUser: false });
       }
     },
-
-    getMessages: async (userId) => {
+    getMessages: async (userId, markSeen = false) => {
       set({ isGettingMsg: true });
       try {
-        const res = await axiosInstance.get(`/message/${userId}`);
-        if (res.data) set({ messages: res.data });
+        // Append the query parameter markSeen to the URL.
+        const res = await axiosInstance.get(
+          `/message/${userId}?markSeen=${markSeen}`
+        );
+        if (res.data) {
+          set((state) => ({
+            messages: res.data,
+          }));
+        }
       } catch (error) {
-        toast.error(error.response.data.message);
+        toast.error(
+          error.response?.data?.message || "Failed to fetch messages"
+        );
       } finally {
         set({ isGettingMsg: false });
       }
     },
 
+    getUnreadMessages: async (userId, markSeen = false) => {
+      try {
+        const res = await axiosInstance.get(
+          `/message/${userId}?markSeen=${markSeen}`
+        );
+        if (res.data) {
+          const unread = res.data.filter(
+            (message) => message.status !== "seen"
+          );
+          // Update both the count and the messages separately
+          set((state) => ({
+            unreadMessageCount: {
+              ...state.unreadMessageCount,
+              [userId]: unread.length,
+            },
+            unreadMessages: {
+              ...state.unreadMessages,
+              [userId]: unread,
+            },
+          }));
+        }
+      } catch (error) {
+        toast.error(
+          error.response?.data?.message || "Failed to fetch messages"
+        );
+      }
+    },
     sendMessage: async (messageData) => {
       set({ isSendingMsg: true });
       const { selectedUser, messages } = get();
@@ -58,7 +84,7 @@ export const useMessageStore = create((set, get) => {
         );
         if (res.data) set({ messages: [...messages, res.data] });
       } catch (error) {
-        toast.error(error.response.data.message);
+        toast.error(error.response?.data?.message || "Failed to send message");
       } finally {
         set({ isSendingMsg: false });
       }
@@ -70,15 +96,29 @@ export const useMessageStore = create((set, get) => {
       if (!selectedUser) return;
 
       socket.on("newMessage", (sentMessage) => {
-        if (sentMessage.senderId !== selectedUser._id) return;
+        const { senderId } = sentMessage;
+        if (senderId !== selectedUser._id) return;
         new Audio("/sounds/notification.mp3").play();
-        set((state) => ({ messages: [...state.messages, sentMessage] }));
+        set((state) => ({
+          messages: [...state.messages, sentMessage],
+          unreadMessageCount: {
+            ...state.unreadMessageCount,
+            [senderId]: (state.unreadMessageCount[senderId] || 0) + 1,
+          },
+        }));
       });
 
-      socket.on("messageSeen", (seenMessage) => {
+      socket.on("messageSeen", (seenMessages) => {
+        if (!seenMessages.length) return;
+        const { senderId } = seenMessages[0];
+
         set((state) => ({
+          unreadMessageCount: {
+            ...state.unreadMessageCount,
+            [senderId]: 0, // Reset unread count when seen
+          },
           messages: state.messages.map((msg) => {
-            const seenMsg = seenMessage.find((m) => m._id === msg._id);
+            const seenMsg = seenMessages.find((m) => m._id === msg._id);
             return seenMsg ? { ...msg, status: seenMsg.status } : msg;
           }),
         }));
@@ -87,27 +127,15 @@ export const useMessageStore = create((set, get) => {
       socket.on("userTyping", ({ senderId }) => {
         if (senderId !== selectedUser._id) return;
 
-        set((state) => {
-          const updatedTyping = { ...state.isTyping, [senderId]: true };
-          // // Ensure typing sound plays when at least one user is typing
-          // if (Object.keys(updatedTyping).length === 1 && typingSound) {
-          //   typingSound
-          //     .play()
-          //     .catch((err) => console.error("Audio play failed:", err));
-          // }
-          return { isTyping: updatedTyping };
-        });
+        set((state) => ({
+          isTyping: { ...state.isTyping, [senderId]: true },
+        }));
       });
 
       socket.on("stoppedTyping", ({ senderId }) => {
         set((state) => {
           const updatedTyping = { ...state.isTyping };
           delete updatedTyping[senderId];
-          // Stop typing sound only when no one is typing
-          // if (Object.keys(updatedTyping).length === 0) {
-          //   typingSound.pause();
-          //   typingSound.currentTime = 0;
-          // }
           return { isTyping: updatedTyping };
         });
       });
@@ -116,6 +144,7 @@ export const useMessageStore = create((set, get) => {
     unsubscribeFromMessage: () => {
       const socket = useAuthStore.getState().socket;
       socket.off("newMessage");
+      socket.off("messageSeen");
       socket.off("userTyping");
       socket.off("stoppedTyping");
     },

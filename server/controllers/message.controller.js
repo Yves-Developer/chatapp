@@ -17,8 +17,11 @@ export const getUserToChat = async (req, res) => {
 export const getMessagesById = async (req, res) => {
   try {
     const { id: userToChat } = req.params;
-
     const myId = req.userId.userId;
+
+    // Only mark messages as seen if markSeen=true is provided in the query string.
+    const markSeen = req.query.markSeen === "true";
+
     const receiverSocketId = getReceiverSocketId(userToChat);
     const senderSocketId = getReceiverSocketId(myId);
 
@@ -29,39 +32,39 @@ export const getMessagesById = async (req, res) => {
       ],
     });
 
-    const seenMessageIds = [];
-    chatMessages.forEach((message) => {
-      if (
-        message.status !== "seen" &&
-        String(message.senderId) === String(userToChat)
-      ) {
-        message.status = "seen";
-        seenMessageIds.push(message._id);
-      }
-    });
-
-    if (seenMessageIds.length > 0) {
-      await Message.updateMany(
-        {
-          _id: { $in: seenMessageIds },
-        },
-        { $set: { status: "seen" } }
-      );
-
-      const seenMessages = await Message.find({
-        $or: [
-          { senderId: myId, receiverId: userToChat },
-          { senderId: userToChat, receiverId: myId },
-        ],
+    if (markSeen) {
+      const seenMessageIds = [];
+      chatMessages.forEach((message) => {
+        // Only mark incoming messages that are not already seen.
+        if (
+          message.status !== "seen" &&
+          String(message.senderId) === String(userToChat)
+        ) {
+          message.status = "seen";
+          seenMessageIds.push(message._id);
+        }
       });
 
-      // Emit seen message to both users if their socket IDs are available
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("messageSeen", seenMessages);
-      }
+      if (seenMessageIds.length > 0) {
+        await Message.updateMany(
+          { _id: { $in: seenMessageIds } },
+          { $set: { status: "seen" } }
+        );
 
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("messageSeen", seenMessages);
+        const seenMessages = await Message.find({
+          $or: [
+            { senderId: myId, receiverId: userToChat },
+            { senderId: userToChat, receiverId: myId },
+          ],
+        });
+
+        // Emit the seen message event to both users.
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("messageSeen", seenMessages);
+        }
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("messageSeen", seenMessages);
+        }
       }
     }
     return res.status(200).json(chatMessages);
@@ -79,7 +82,7 @@ export const sendMessagesById = async (req, res) => {
     const receiverSocketId = getReceiverSocketId(receiverId);
 
     // Default message status is "Sent"
-    let status = "Sent";
+    let status = "sent";
 
     // If the receiver is online, mark as "Delivered"
     if (receiverSocketId) {
@@ -104,7 +107,7 @@ export const sendMessagesById = async (req, res) => {
       getActiveChat(senderId) === receiverId &&
       getActiveChat(receiverId) === senderId
     ) {
-      sentMessage.status = "Seen";
+      sentMessage.status = "seen";
       await sentMessage.save(); // Save only when status changes to "Seen"
 
       // Emit "messageSeen" event to both sender and receiver if they are online
