@@ -6,6 +6,8 @@ Realitime Chat web application
 2. ExpressJs
 3. Socket.io
 4. MongoDb
+5. HTML5
+6. TailwindCss
 
    ``` bash
 
