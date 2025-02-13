@@ -4,6 +4,22 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "./useAuthStore";
 
 export const useMessageStore = create((set, get) => {
+  // Define the global handler for new messages that updates unread counts.
+  const globalNewMessageHandler = (sentMessage) => {
+    const { senderId } = sentMessage;
+    const selectedUser = get().selectedUser;
+    set((state) => ({
+      unreadMessageCount: {
+        ...state.unreadMessageCount,
+        [senderId]: (state.unreadMessageCount[senderId] || 0) + 1,
+      },
+      unreadMessages: {
+        ...state.unreadMessages,
+        [senderId]: [...(state.unreadMessages[senderId] || []), sentMessage],
+      },
+    }));
+  };
+
   return {
     messages: [],
     users: [],
@@ -26,6 +42,7 @@ export const useMessageStore = create((set, get) => {
         set({ isGettingUser: false });
       }
     },
+
     getMessages: async (userId, markSeen = false) => {
       set({ isGettingMsg: true });
       try {
@@ -74,6 +91,7 @@ export const useMessageStore = create((set, get) => {
         );
       }
     },
+
     sendMessage: async (messageData) => {
       set({ isSendingMsg: true });
       const { selectedUser, messages } = get();
@@ -97,14 +115,11 @@ export const useMessageStore = create((set, get) => {
 
       socket.on("newMessage", (sentMessage) => {
         const { senderId } = sentMessage;
+        // Only handle messages for the currently selected user.
         if (senderId !== selectedUser._id) return;
         new Audio("/sounds/notification.mp3").play();
         set((state) => ({
           messages: [...state.messages, sentMessage],
-          unreadMessageCount: {
-            ...state.unreadMessageCount,
-            [senderId]: (state.unreadMessageCount[senderId] || 0) + 1,
-          },
         }));
       });
 
@@ -167,6 +182,20 @@ export const useMessageStore = create((set, get) => {
         useAuthStore.getState().userAuth?.user?._id ||
         useAuthStore.getState().userAuth?.userId;
       socket.emit("activeChat", { userId: myId, chatWith: selectedUser });
+    },
+
+    // ─── REAL-TIME GLOBAL UNREAD MESSAGE HANDLING ─────────────────────────────
+
+    subscribeToGlobalNewMessage: () => {
+      const socket = useAuthStore.getState().socket;
+      socket.on("newMessage", globalNewMessageHandler);
+    },
+
+    unsubscribeFromGlobalNewMessage: () => {
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.off("newMessage", globalNewMessageHandler);
+      }
     },
   };
 });

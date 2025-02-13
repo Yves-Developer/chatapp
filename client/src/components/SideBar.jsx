@@ -24,16 +24,27 @@ const SideBar = () => {
   const myId = userAuth?.user?._id || userAuth?.userId;
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+  }, [getUsers, onlineUsers]);
 
   useEffect(() => {
     for (let user of filteredUsers) {
       getUnreadMessages(user?._id);
     }
-  }, [filteredUsers, getUnreadMessages]);
+  }, [filteredUsers, onlineUsers, getUnreadMessages]);
+  useEffect(() => {
+    useMessageStore.getState().subscribeToGlobalNewMessage();
+    return () => {
+      useMessageStore.getState().unsubscribeFromGlobalNewMessage();
+    };
+  }, [unreadMessages, unreadMessageCount]);
+
   if (isGettingUser) {
     return (
-      <div className="h-full max-sm:w-full w-57 border-r border-base-300 flex flex-col justify-center items-center">
+      <div
+        className={`h-full max-sm:w-full max-sm:${
+          selectedUser ? "hidden" : "block"
+        } w-57 border-r border-base-300 flex flex-col justify-center items-center`}
+      >
         <Loader2 className="animate-spin" />
       </div>
     );
@@ -92,7 +103,7 @@ const SideBar = () => {
                 </p>
               </div>
               {mesgCount > 0 &&
-                unreadMessages[user._id][0].senderId !== myId && (
+                unreadMessages[user._id][0]?.senderId !== myId && (
                   <span className="absolute badge bg-primary text-primary-content right-2">
                     {mesgCount}
                   </span>
