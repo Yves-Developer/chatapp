@@ -7,7 +7,6 @@ export const useMessageStore = create((set, get) => {
   // Define the global handler for new messages that updates unread counts.
   const globalNewMessageHandler = (sentMessage) => {
     const { senderId } = sentMessage;
-    const selectedUser = get().selectedUser;
     set((state) => ({
       unreadMessageCount: {
         ...state.unreadMessageCount,
@@ -114,13 +113,24 @@ export const useMessageStore = create((set, get) => {
       if (!selectedUser) return;
 
       socket.on("newMessage", (sentMessage) => {
-        const { senderId } = sentMessage;
-        // Only handle messages for the currently selected user.
-        if (senderId !== selectedUser._id) return;
-        new Audio("/sounds/notification.mp3").play();
-        set((state) => ({
-          messages: [...state.messages, sentMessage],
-        }));
+        set((state) => {
+          // Check if the message already exists in the store to prevent duplication
+          const messageExists = state.messages.some(
+            (msg) => msg._id === sentMessage._id
+          );
+
+          if (messageExists) return state; // If it exists, do nothing
+
+          // Play notification sound only if message is truly new
+          const audio = new Audio("/sounds/notification.mp3");
+          audio
+            .play()
+            .catch((error) => console.warn("Audio playback failed:", error));
+
+          return {
+            messages: [...state.messages, sentMessage], // Append new message
+          };
+        });
       });
 
       socket.on("messageSeen", (seenMessages) => {
@@ -158,8 +168,8 @@ export const useMessageStore = create((set, get) => {
 
     unsubscribeFromMessage: () => {
       const socket = useAuthStore.getState().socket;
-      socket.off("newMessage");
-      socket.off("messageSeen");
+      // socket.off("newMessage");
+      // socket.off("messageSeen");
       socket.off("userTyping");
       socket.off("stoppedTyping");
     },

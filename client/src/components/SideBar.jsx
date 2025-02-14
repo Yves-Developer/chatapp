@@ -12,6 +12,8 @@ const SideBar = () => {
     unreadMessageCount,
     selectedUser,
     unreadMessages,
+    subscribeToGlobalNewMessage,
+    unsubscribeFromGlobalNewMessage,
     getUnreadMessages,
     setSelectedUser,
     isGettingUser,
@@ -30,13 +32,13 @@ const SideBar = () => {
     for (let user of filteredUsers) {
       getUnreadMessages(user?._id);
     }
-  }, [filteredUsers, onlineUsers, getUnreadMessages]);
+  }, [filteredUsers, selectedUser, onlineUsers, getUnreadMessages]);
   useEffect(() => {
-    useMessageStore.getState().subscribeToGlobalNewMessage();
+    subscribeToGlobalNewMessage();
     return () => {
-      useMessageStore.getState().unsubscribeFromGlobalNewMessage();
+      unsubscribeFromGlobalNewMessage();
     };
-  }, [unreadMessages, unreadMessageCount]);
+  }, []);
 
   if (isGettingUser) {
     return (

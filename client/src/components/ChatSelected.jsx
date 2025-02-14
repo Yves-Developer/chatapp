@@ -45,9 +45,9 @@ const ChatSelected = () => {
 
   return (
     <div className="w-full flex flex-col flex-1 overflow-y-auto p-5">
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <div
-          key={message._id}
+          key={index}
           className={`chat ${
             userAuth?.userId === message.senderId ||
             userAuth?.user?._id === message.senderId
