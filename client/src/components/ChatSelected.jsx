@@ -76,6 +76,12 @@ const ChatSelected = () => {
                 : ""
             }`}
           >
+            {message.image && (
+              <img
+                src={message.image}
+                className="sm:max-w-[200px] mb-2 rounded-md"
+              />
+            )}
             {message.text}
           </div>
           <div className="chat-footer opacity-50">

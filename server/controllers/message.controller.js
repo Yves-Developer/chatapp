@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, getActiveChat, io } from "../lib/socket.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const getUserToChat = async (req, res) => {
   try {
@@ -76,7 +77,13 @@ export const getMessagesById = async (req, res) => {
 
 export const sendMessagesById = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, image } = req.body;
+    let imgUrl;
+    if (image) {
+      const uploadResponse = await cloudinary.uploader.upload(image);
+      imgUrl = uploadResponse.secure_url;
+    }
+
     const { id: receiverId } = req.params;
     const senderId = req.userId.userId;
     const receiverSocketId = getReceiverSocketId(receiverId);
@@ -94,9 +101,10 @@ export const sendMessagesById = async (req, res) => {
       senderId,
       receiverId,
       text,
+      image: imgUrl,
       status,
     }).save();
-
+    console.log(imgUrl);
     // Emit "newMessage" event to receiver if they are online
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", sentMessage);
